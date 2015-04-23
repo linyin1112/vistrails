@@ -1,0 +1,28 @@
+<vistrail id="" name="" version="1.0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vistrails.org/vistrail.xsd">
+  <action date="2015-04-23 00:03:01" id="1" prevId="0" session="0" user="yinlin">
+    <add id="0" objectId="0" parentObjId="" parentObjType="" what="module">
+      <module cache="1" id="0" name="PythonSource" namespace="" package="org.vistrails.vistrails.basic" version="2.1" />
+    </add>
+    <add id="1" objectId="0" parentObjId="0" parentObjType="module" what="location">
+      <location id="0" x="-13.0" y="26.0" />
+    </add>
+  </action>
+  <action date="2015-04-23 00:03:16" id="2" prevId="1" session="0" user="yinlin">
+    <add id="2" objectId="0" parentObjId="0" parentObjType="module" what="portSpec">
+      <portSpec id="0" maxConns="-1" minConns="0" name="dd" optional="0" sortKey="0" type="input">
+        <portSpecItem default="" entryType="" id="0" label="" module="String" namespace="" package="org.vistrails.vistrails.basic" pos="0" values="" />
+      </portSpec>
+    </add>
+    <add id="3" objectId="1" parentObjId="0" parentObjType="module" what="portSpec">
+      <portSpec id="1" maxConns="-1" minConns="0" name="d2" optional="0" sortKey="1" type="input">
+        <portSpecItem default="" entryType="" id="1" label="" module="String" namespace="" package="org.vistrails.vistrails.basic" pos="0" values="" />
+      </portSpec>
+    </add>
+    <add id="4" objectId="0" parentObjId="0" parentObjType="module" what="function">
+      <function id="0" name="source" pos="0" />
+    </add>
+    <add id="5" objectId="0" parentObjId="0" parentObjType="function" what="parameter">
+      <parameter alias="" id="0" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="print%20%221%22%0Aprint%20%222%22" />
+    </add>
+  </action>
+</vistrail>
