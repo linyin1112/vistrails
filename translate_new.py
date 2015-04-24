@@ -32,8 +32,7 @@ def get_package(name):
 		'WriteFile' : 'org.vistrails.vistrails.basic',
 		'FileSink' : 'org.vistrails.vistrails.basic',
 		'Sum' : 'org.vistrails.vistrails.control_flow',
-		'PythonSource' : 'org.vistrails.vistrails.basic',
-		'String' : 'org.vistrails.vistrails.basic'
+		'PythonSource' : 'org.vistrails.vistrails.basic'
 	}[name]
 
 def get_signature(mod_type, port_type):
@@ -161,7 +160,9 @@ def get_port_type(mod_type, port_type):
 		},
 		'PythonSource' : {
 			'out' : 'source',
-			'string' : 'destination'
+			'string' : 'destination',
+			'custom_in' : 'destination',
+			'custom_out' : 'source'
 			#default : 'destination'
 			},
 	}[mod_type][port_type]
@@ -176,8 +177,10 @@ integerNodes = []
 count = {'action' : 1, 'add' : 0, 'module' : 0, 'location' : 0, 'connection' : 0, 'port' : 0, 'function' : 0, 'parameter' : 0}
 ignoreValueIntegerNode = ''
 
-portname = {}
-porttype = {}
+inportname = {}
+inporttype = {}
+outportname = {}
+outporttype = {}
 # Read in all the nodes from json
 for node in data['nodes']:
 	id = node['nid']
@@ -198,14 +201,21 @@ for node in data['nodes']:
 			h = HTMLParser.HTMLParser()
 			s = h.unescape(tmp)#convert html format into normal string
 			value = urllib.quote(s)#convert normal string into url format
+		else:
+			value = ''
 		#port
-		#portlen = len(node['fields']['in'])
-		portlen = len(node['custom_fields']['inputs'])
-		for i in range(0, portlen):
+		#inportlen = len(node['fields']['in'])
+		inportlen = len(node['custom_fields']['inputs'])
+		outportlen = len(node['custom_fields']['outputs'])
+		
+		for i in range(0, inportlen):
 			key = node['fields']['in'][i+1].get('name')
-			portname[i] = node['custom_fields']['inputs'][key]['key']
-			porttype[i] = node['custom_fields']['inputs'][key]['type']
-
+			inportname[i] = node['custom_fields']['inputs'][key]['key']
+			inporttype[i] = node['custom_fields']['inputs'][key]['type']
+		for i in range(0, outportlen):
+			key = node['fields']['out'][i+1].get('name')
+			outportname[i] = node['custom_fields']['outputs'][key]['key']
+			outporttype[i] = node['custom_fields']['outputs'][key]['type']
 	else:
 		value = ''
 	modules.append(Module(id, type, x, y, value))
@@ -249,7 +259,6 @@ for mod in modules:
 	inner.attrib['cache'] = '1'
 	inner.attrib['id'] = str(count['module'])
 	inner.attrib['name'] = mod.type
-	print mod.type
 	inner.attrib['namespace'] = ''
 	inner.attrib['package'] = get_package(mod.type)
 	inner.attrib['version'] = get_version(mod.type)
@@ -272,19 +281,21 @@ for mod in modules:
 	loc.attrib['x'] = str(mod.x)
 	loc.attrib['y'] = str(mod.y)
 
-	addport = [None]*(len(portname))
-	innerport = [None]*(len(portname))
-
+	addport = [None]*(len(inportname))
+	innerport = [None]*(len(inportname))
+	addport2 = [None]*(len(outportname))
+	outterport = [None]*(len(outportname))
 
 	if mod.type == 'PythonSource':
-		for i in range(0, len(portname)):
+		j = 0
+		for i in range(0, len(inportname)):
 
 			count['add'] += 1
 			count['location'] += 1
 
 			addport[i] = ElementTree.SubElement(act, 'add')
 			addport[i].attrib['id'] = str(count['add'])
-			addport[i].attrib['objectId'] = str(i)
+			addport[i].attrib['objectId'] = str(j)
 			addport[i].attrib['parentObjId'] = str(count['module'] - 1)
 			addport[i].attrib['parentObjType'] = 'module'
 			addport[i].attrib['what'] = 'portSpec'
@@ -294,7 +305,7 @@ for mod in modules:
 			innerport[i].attrib['id'] = str(i)
 			innerport[i].attrib['maxConns'] = '-1' #dont know
 			innerport[i].attrib['minConns'] = '0'
-			innerport[i].attrib['name'] = str(portname[i])
+			innerport[i].attrib['name'] = str(inportname[i])
 			innerport[i].attrib['optional'] = '0'
 			innerport[i].attrib['sortKey'] = str(i)
 			innerport[i].attrib['type'] = 'input'
@@ -304,12 +315,47 @@ for mod in modules:
 			portspec.attrib['entryType'] = ''
 			portspec.attrib['id'] = str(i)
 			portspec.attrib['label'] = ''
-			portspec.attrib['module'] = str(porttype[i])
+			portspec.attrib['module'] = str(inporttype[i])
 			portspec.attrib['namespace'] = ''
-			portspec.attrib['package'] = str(get_package(porttype[i]))#'org.vistrails.vistrails.basic'#get_package(porttype[i+1])
+			portspec.attrib['package'] = str(get_package(inporttype[i]))#'org.vistrails.vistrails.basic'#get_package(inporttype[i+1])
 			portspec.attrib['pos'] = '0'
 			portspec.attrib['value'] = ''
 
+			j += 1
+
+		for i in range(0, len(outportname)):
+			count['add'] += 1
+			count['location'] += 1
+
+			addport2[i] = ElementTree.SubElement(act, 'add')
+			addport2[i].attrib['id'] = str(count['add'])
+			addport2[i].attrib['objectId'] = str(j)
+			addport2[i].attrib['parentObjId'] = str(count['module'] - 1)
+			addport2[i].attrib['parentObjType'] = 'module'
+			addport2[i].attrib['what'] = 'portSpec'
+
+
+			outterport[i] = ElementTree.SubElement(addport2[i], 'portSpec')
+			outterport[i].attrib['id'] = str(i)
+			outterport[i].attrib['maxConns'] = '-1' #dont know
+			outterport[i].attrib['minConns'] = '0'
+			outterport[i].attrib['name'] = str(outportname[i])
+			outterport[i].attrib['optional'] = '0'
+			outterport[i].attrib['sortKey'] = str(i)
+			outterport[i].attrib['type'] = 'output'
+
+			portspec = ElementTree.SubElement(outterport[i], 'portSpecItem')
+			portspec.attrib['default'] = ''
+			portspec.attrib['entryType'] = ''
+			portspec.attrib['id'] = str(i)
+			portspec.attrib['label'] = ''
+			portspec.attrib['module'] = str(outporttype[i])
+			portspec.attrib['namespace'] = ''
+			portspec.attrib['package'] = str(get_package(outporttype[i]))#'org.vistrails.vistrails.basic'#get_package(inporttype[i+1])
+			portspec.attrib['pos'] = '0'
+			portspec.attrib['value'] = ''
+
+			j += 1
 			
 
 
@@ -418,11 +464,13 @@ for link in links:
 	port.attrib['id'] = str(count['port'])
 	port.attrib['moduleId'] =  str(mod1.vt_id)
 	port.attrib['moduleName'] = mod1.type
+	modname1 = mod1.type
+	modport1 = link.port_a
 
 	try:
 		port.attrib['name'] = get_port_name(mod1.type, link.port_a)
 	except KeyError:
-		port.attrib['name'] = str(portname[i])#portname[0]
+		port.attrib['name'] = str(modport1)#inportname[0]
 	try:
 		port.attrib['signature'] = get_signature(mod1.type, link.port_a)
 	except KeyError:
@@ -430,7 +478,10 @@ for link in links:
 	try:
 		port.attrib['type'] = get_port_type(mod1.type, link.port_a)
 	except KeyError:
-		port.attrib['type'] = 'destination'#porttype[0]
+		if modport1 in inportname.values():
+			port.attrib['type'] = 'destination'#inporttype[0]
+		else:
+			port.attrib['type'] = 'source'
 	# port.attrib['name'] = get_port_name(mod1.type, link.port_a)
 	# port.attrib['signature'] = get_signature(mod1.type, link.port_a)
 	# port.attrib['type'] = get_port_type(mod1.type, link.port_a)
@@ -452,10 +503,12 @@ for link in links:
 	port2.attrib['moduleId'] =  str(mod2.vt_id)
 	port2.attrib['moduleName'] = mod2.type
 
+	modname2 = mod2.type
+	modport2 = link.port_b
 	try:
 		port2.attrib['name'] = get_port_name(mod2.type, link.port_b)
 	except KeyError:
-		port2.attrib['name'] = str(portname[i])
+		port2.attrib['name'] = str(modport2)
 	try:
 		port2.attrib['signature'] = get_signature(mod2.type, link.port_b)
 	except KeyError:
@@ -463,10 +516,13 @@ for link in links:
 	try:
 		port2.attrib['type'] = get_port_type(mod2.type, link.port_b)
 	except KeyError:
-		port2.attrib['type'] = 'destination'
+		if modport2 in inportname.values():
+			port2.attrib['type'] = 'destination'#inporttype[0]
+		else:
+			port2.attrib['type'] = 'source'
 	# port2.attrib['name'] = 'dd'
 	# port2.attrib['signature'] = '(org.vistrails.vistrails.basic:String)'
-	# port2.attrib['type'] = 'destination'#porttype[0]
+	# port2.attrib['type'] = 'destination'#inporttype[0]
 
 	i += 1
 	count['add'] += 1
