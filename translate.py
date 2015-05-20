@@ -34,6 +34,7 @@ def get_package(name):
         'FileSink' : 'org.vistrails.vistrails.basic',
         'Sum' : 'org.vistrails.vistrails.control_flow',
         'PythonSource' : 'org.vistrails.vistrails.basic',
+        'MatlabSource' : 'org.vistrails.vistrails.basic',
         'File' : 'org.vistrails.vistrails.basic'
     }[name]
 
@@ -73,6 +74,10 @@ def get_signature(mod_type, port_type):
             'out' : '(org.vistrails.vistrails.basic:String)'
             #default : '(org.vistrails.vistrails.basic:String)'
         },
+        'MatlabSource' : {
+            'out' : '(org.vistrails.vistrails.basic:String)'
+            #default : '(org.vistrails.vistrails.basic:String)'
+        },
         'File' : {
             'out' : '(org.vistrails.vistrails.basic:File)'
         }
@@ -90,6 +95,7 @@ def get_version(name):
         'FileSink' : '2.1',
         'Sum' : '0.2.4',
         'PythonSource' : '2.1',
+        'MatlabSource' : '2.1',
         'File' : '' ####################
     }[name]
 
@@ -126,6 +132,11 @@ def get_port_name(mod_type, port_type):
             'out' : 'Result'
         },
         'PythonSource' : {
+            'out' : 'source',
+            'string' : 'source'
+            #defalut : port type
+        },
+        'MatlabSource' : {
             'out' : 'source',
             'string' : 'source'
             #defalut : port type
@@ -174,6 +185,13 @@ def get_port_type(mod_type, port_type):
             'custom_out' : 'source'
             #default : 'destination'
         },
+        'MatlabSource' : {
+            'out' : 'source',
+            'string' : 'destination',
+            'custom_in' : 'destination',
+            'custom_out' : 'source'
+            #default : 'destination'
+        },
         'File' : {
             'out' : 'source'
         }
@@ -205,6 +223,12 @@ for node in data['nodes']:
         tmp = node['fields']['in'][0].get('val')
         with open('matlab.m', 'w') as f:
             f.write(tmp)
+        tmp = """from subprocess import call\nmatlab_loc="/var/matlab/bin/matlab"\nfile_loc="./matlab.m"\ncall([matlab_loc, '-nojvm', '-nodisplay', '-r "run ' + file_loc[:-2] + ';exit;"'])"""
+        h = HTMLParser.HTMLParser()
+        s = h.unescape(tmp)#convert html format into normal string
+        value = urllib.quote(s)#convert normal string into url format
+        type = 'PythonSource'
+
     elif type == 'String':
         value = node['fields']['in'][0]['val']
     elif type == 'Integer':
@@ -237,8 +261,8 @@ for node in data['nodes']:
         value = '/PATH' + node['fields']['in'][0]['val']###########
     else:
         value = ''
-    if type != 'MatlabSource':
-        modules.append(Module(id, type, x, y, value))
+
+    modules.append(Module(id, type, x, y, value))
 # Read in all the connections from json
 for conn in data['connections']:
     par1 = conn['from_node']
